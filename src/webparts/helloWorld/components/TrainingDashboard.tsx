@@ -30,6 +30,14 @@ import {
 import {
  TrainingService
 } from "./TrainingService";
+import {
+ getTrainings,
+ getEnrollments
+} from "../services/TrainingDataService";
+import {
+ enrollCurrentUser,
+ cancelEnrollment
+} from "../services/EnrollmentService";
 
 // Creates a PnPjs client connected to the current SharePoint site.
 import { spfi, SPFI, SPFx } from "@pnp/sp";
@@ -395,97 +403,12 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
    setSp(spInstance);
  }, [props.context]);
 
- // Loads and maps training records from the Trainings-SAR list.
- const loadTrainings = async (
-   spInstance: SPFI
- ): Promise<void> => {
-   const items = await spInstance.web.lists
-     .getByTitle("Trainings-SAR")
-     .items
-     .select(
-       "Id",
-       "Title",
-       "Description",
-       "Category",
-       "Trainer",
-       "TrainingDate",
-       "AvailableSeats",
-       "Status"
-     )
-     .orderBy(
-       "TrainingDate",
-       true
-     )();
-   const data: ITraining[] =
-     items.map((item) => ({
-       Id: item.Id,
-       TrainingName:
-         item.Title || "",
-       Description:
-         item.Description || "",
-       Category:
-         item.Category || "",
-       Trainer:
-         item.Trainer || "",
-       TrainingDate:
-         item.TrainingDate || "",
-       AvailableSeats:
-         Number(item.AvailableSeats || 0),
-       Status:
-         item.Status || ""
-     }));
-   setTrainings(data);
+ const loadTrainings = async (spInstance: SPFI): Promise<void> => {
+   setTrainings(await getTrainings(spInstance));
  };
 
- // Loads enrollment records and expands their employee and training lookups.
- const loadEnrollments = async (
-   spInstance: SPFI
- ): Promise<void> => {
-   const items = await spInstance.web.lists
-     .getByTitle("Enrollments-SAR")
-     .items
-     .select(
-       "Id",
-       "Employee/Title",
-       "Training/Id",
-       "Training/Title",
-       "EnrollmentDate",
-       "Status",
-       "CompletionStatus"
-     )
-     .expand(
-       "Employee",
-       "Training"
-     )
-     .orderBy(
-       "Created",
-       false
-     )();
-   const data: IEnrollment[] =
-     items.map((item) => ({
-       Id: item.Id,
-       Employee:
-         item.Employee &&
-         item.Employee.Title
-           ? item.Employee.Title
-           : "",
-       Training:
-         item.Training &&
-         item.Training.Title
-           ? item.Training.Title
-           : "",
-       TrainingId:
-         item.Training && item.Training.Id
-           ? Number(item.Training.Id)
-           : 0,
-       EnrollmentDate:
-         item.EnrollmentDate || "",
-       Status:
-         item.Status || "",
-       CompletionStatus:
-         item.CompletionStatus || ""
-     }));
-   setEnrollments(data);
+ const loadEnrollments = async (spInstance: SPFI): Promise<void> => {
+   setEnrollments(await getEnrollments(spInstance));
  };
 
  // Loads the current user, trainings, and enrollments when SharePoint is ready.
@@ -650,119 +573,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        setSubmitting(true);
        setError("");
        setSuccess("");
-       // ----------------------------------------------------
-       // GET CURRENT USER
-       // ----------------------------------------------------
-       const currentUser =
-         await sp.web.currentUser();
-       // ----------------------------------------------------
-       // CHECK DUPLICATE ENROLLMENT
-       // ----------------------------------------------------
-       const existing =
-         await sp.web.lists
-           .getByTitle(
-             "Enrollments-SAR"
-           )
-           .items
-           .select(
-             "Id",
-             "Employee/Id",
-             "Training/Id"
-           )
-           .expand(
-             "Employee",
-             "Training"
-           )
-           .filter(
-             "Employee/Id eq " +
-             currentUser.Id +
-             " and Training/Id eq " +
-             selectedTraining.Id +
-             " and Status ne 'Cancelled'"
-           )();
-       if (
-         existing.length > 0
-       ) {
-         setError(
-           "You are already enrolled in this training."
-         );
-         return;
-       }
-
-       // ----------------------------------------------------
-       // GET LATEST TRAINING RECORD
-       // ----------------------------------------------------
-       const trainingItem =
-         await sp.web.lists
-           .getByTitle(
-             "Trainings-SAR"
-           )
-           .items
-           .getById(
-             selectedTraining.Id
-           )
-           .select(
-             "Id",
-             "Title",
-             "AvailableSeats"
-           )();
-
-       const currentSeats: number =
-         Number(
-           trainingItem.AvailableSeats || 0
-         );
-
-       // ----------------------------------------------------
-       // CHECK SEATS
-       // ----------------------------------------------------
-       if (
-         currentSeats <= 0
-       ) {
-         setError(
-           "No seats are available for this training."
-         );
-         return;
-       }
-
-       // ----------------------------------------------------
-       // CREATE ENROLLMENT
-       // ----------------------------------------------------
-       await sp.web.lists
-         .getByTitle(
-           "Enrollments-SAR"
-         )
-         .items
-         .add({
-           Title:
-             "Enrollment - " +
-             currentUser.Title,
-           EmployeeId:
-             currentUser.Id,
-           TrainingId:
-             selectedTraining.Id,
-           EnrollmentDate:
-             new Date().toISOString(),
-           Status:
-             "Enrolled",
-           CompletionStatus:
-             "Not Started"
-         });
-
-       // ----------------------------------------------------
-       // DECREASE AVAILABLE SEATS
-       // ----------------------------------------------------
-       await sp.web.lists
-         .getByTitle(
-           "Trainings-SAR"
-         )
-         .items
-         .getById(
-           selectedTraining.Id
-         )
-         .update({
-           AvailableSeats:
-             currentSeats - 1
-         });
+       await enrollCurrentUser(
+         sp,
+         selectedTraining.Id,
+         selectedTraining.TrainingName
+       );
 
        // ----------------------------------------------------
        // RELOAD TRAININGS
@@ -790,9 +605,10 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          "Enrollment error:",
          err
        );
-       setError(
-         "Enrollment failed. Please verify the SharePoint lookup columns, internal names and permissions."
-       );
+       const enrollmentError: string = err instanceof Error
+         ? err.message
+         : "Enrollment failed. Please verify the SharePoint lookup columns, internal names and permissions.";
+       setError(enrollmentError);
      }
      finally {
        setSubmitting(false);
@@ -810,33 +626,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        setError("");
        setSuccess("");
 
-       const trainingItem =
-         await sp.web.lists
-           .getByTitle("Trainings-SAR")
-           .items
-           .getById(enrollment.TrainingId)
-           .select(
-             "Id",
-             "AvailableSeats",
-             "Status"
-           )();
-       const currentSeats: number =
-         Number(trainingItem.AvailableSeats || 0);
-       await sp.web.lists
-         .getByTitle("Enrollments-SAR")
-         .items
-         .getById(enrollment.Id)
-         .update({
-           Status: "Cancelled"
-         });
-
-       await sp.web.lists
-         .getByTitle("Trainings-SAR")
-         .items
-         .getById(enrollment.TrainingId)
-         .update({
-           AvailableSeats: currentSeats + 1
-         });
+       await cancelEnrollment(sp, enrollment.Id, enrollment.TrainingId);
 
        await loadTrainings(sp);
        await loadEnrollments(sp);
