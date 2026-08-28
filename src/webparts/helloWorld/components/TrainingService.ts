@@ -34,9 +34,11 @@ export class TrainingService {
 
  public async getCurrentUserRole(): Promise<UserRole> {
    const currentUser = await this.sp.web.currentUser();
-   const email: string = (currentUser.Email || "").toLowerCase();
+   const userEmail: string = (currentUser.Email || "")
+     .trim()
+     .toLowerCase();
 
-   if (!email) {
+   if (!userEmail) {
      return "Employee";
    }
 
@@ -47,11 +49,18 @@ export class TrainingService {
        isActive?: boolean;
    }> = [];
    try {
-     roles = await this.sp.web.lists
-       .getByTitle("UserRoles-SAR")
-       .items
-      .select("UserEmail", "UserName", "Role", "isActive")
-      .filter("UserEmail eq '" + email.replace(/'/g, "''") + "' and isActive eq 1")();
+     try {
+       roles = await this.sp.web.lists
+         .getByTitle("UserRoles-SAR")
+         .items
+        .select("UserEmail", "UserName", "Role")();
+     }
+    catch {
+       roles = await this.sp.web.lists
+         .getByTitle("UserRolesSAR")
+         .items
+         .select("UserEmail", "UserName", "Role")();
+     }
    }
    catch (error) {
      console.warn(
@@ -62,13 +71,19 @@ export class TrainingService {
    }
 
    const roleRecord: IUserRole | undefined = roles
-    .filter((item) => item.isActive === true &&
-       (item.Role === "Admin" || item.Role === "HR"))
+      .filter((item) => {
+      const roleEmail: string = (item.UserEmail || "").trim().toLowerCase();
+      const normalizedRole: string = (item.Role || "").trim().toLowerCase();
+      return roleEmail === userEmail &&
+        (normalizedRole === "admin" || normalizedRole === "hr");
+    })
      .map((item): IUserRole => ({
        UserEmail: item.UserEmail || "",
        UserName: item.UserName || "",
-       Role: item.Role === "Admin" ? "Admin" : "HR",
-       IsActive: true
+       Role: (item.Role || "").trim().toLowerCase() === "admin"
+         ? "Admin"
+         : "HR",
+      IsActive: true
     }))[0];
 
    return roleRecord ? roleRecord.Role : "Employee";

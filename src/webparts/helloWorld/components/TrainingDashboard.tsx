@@ -929,7 +929,6 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
            }
          }}
        />
-       {userRole === "Admin" && (
 <DefaultButton
          text={showAdminBoard ? "Training Catalog" : "Admin Board"}
          onClick={() => {
@@ -941,7 +940,6 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
            rootHovered: { borderRadius: "6px" }
          }}
        />
-       )}
 </div>
     </div>
 
@@ -1026,7 +1024,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      {/* ================================================== */}
      {/* MY COURSES */}
      {/* ================================================== */}
-{showAdminBoard && userRole === "Admin" && <div style={styles.section}>
+{showAdminBoard && <div style={styles.section}>
 <h2 style={styles.sectionTitle}>Admin Board</h2>
 <div style={styles.statsContainer}>
 <div style={styles.statCard}>
@@ -1054,14 +1052,14 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          marginBottom: "20px",
          flexWrap: "wrap"
        }}>
-<PrimaryButton
+  {userRole === "Admin" && <PrimaryButton
          text="Create Training"
          onClick={() => setError("Training creation form is not configured yet.")}
-       />
-<DefaultButton
+    />}
+  {userRole === "Admin" && <DefaultButton
          text="Manage Users"
          onClick={() => setError("User role management page is not configured yet.")}
-       />
+  />}
 </div>
 <h3 style={styles.sectionTitle}>Training Management</h3>
 <div style={{ overflowX: "auto", marginBottom: "28px" }}>
@@ -1081,11 +1079,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 <td style={{ padding: "10px" }}>{training.Status}</td>
 <td style={{ padding: "10px" }}>{training.AvailableSeats}</td>
 <td style={{ padding: "10px" }}>
-<DefaultButton
+       {userRole === "Admin" && <DefaultButton
                  text="Delete"
                  disabled={submitting}
                  onClick={() => deleteTraining(training)}
-               />
+               />}
 </td>
 </tr>
            ))}

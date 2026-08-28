@@ -26,7 +26,7 @@ export interface IUserRole {
  UserEmail: string;
  UserName: string;
  Role: "Admin" | "HR";
- IsActive: boolean;
+ IsActive?: boolean;
 }
 
 // Roles available to every authenticated user of the application.
