@@ -23,8 +23,15 @@ import MyCourses from "./MyCourses";
 // Provides the TypeScript models used for SharePoint data.
 import {
  IEnrollment,
- ITraining
+ ITraining,
+ UserRole
 } from "./TrainingModels";
+
+import {
+ TrainingService,
+ canManageTrainings,
+ canDeleteTrainings
+} from "./TrainingService";
 
 // Creates a PnPjs client connected to the current SharePoint site.
 import { spfi, SPFI, SPFx } from "@pnp/sp";
@@ -88,6 +95,10 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  // Stores the display name of the current SharePoint user.
  const [employeeName, setEmployeeName] =
    React.useState<string>("");
+
+ // Stores the current user's resolved RBAC role.
+ const [userRole, setUserRole] =
+   React.useState<UserRole>("Employee");
 
  // Controls the compact profile panel shown from the avatar.
  const [showProfile, setShowProfile] =
@@ -466,6 +477,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        setEmployeeName(
          currentUser.Title || ""
        );
+       const trainingService: TrainingService =
+         new TrainingService(sp);
+       const role: UserRole =
+         await trainingService.getCurrentUserRole();
+       setUserRole(role);
        // Load Trainings
        await loadTrainings(sp);
        // Load Enrollments
@@ -850,11 +866,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 <div style={styles.header}>
 <div>
 <h1 style={styles.headerTitle}>
-           Employee Training Dashboard
+           {userRole} Training Dashboard
 </h1>
 <p style={styles.headerSubtitle}>
            Discover and enroll in internal
-           training programs
+           training programs as a {userRole.toLowerCase()}
 </p>
 </div>
 <div style={styles.userBadge}>
@@ -873,7 +889,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
            {employeeName || "User"}
 </p>
 <p style={styles.profileLabel}>
-           SharePoint employee
+           Role: {userRole}
 </p>
 </div>
        )}
@@ -945,6 +961,28 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 <div style={styles.statNumber}>
            {totalTrainings}
 </div>
+
+  {canManageTrainings(userRole) && (
+<div style={{
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+    flexWrap: "wrap"
+  }}>
+<DefaultButton
+      text="Create Training"
+      onClick={() => setError("Training creation form is not configured yet.")}
+      styles={{ root: { borderRadius: "6px" } }}
+    />
+    {canDeleteTrainings(userRole) && (
+<DefaultButton
+     text="Manage Users"
+     onClick={() => setError("User role management page is not configured yet.")}
+     styles={{ root: { borderRadius: "6px" } }}
+      />
+    )}
+</div>
+  )}
 <div style={styles.statLabel}>
            Total Available Trainings
 </div>
@@ -1162,7 +1200,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 </div>
 
                {/* ENROLL BUTTON */}
-<PrimaryButton
+             {userRole === "Employee" && <PrimaryButton
                  text={
                    training.AvailableSeats > 0
                      ? "Enroll Now"
@@ -1182,7 +1220,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
                      borderRadius: "6px"
                    }
                  }}
-               />
+               />}
 </div>
            )
          )}
