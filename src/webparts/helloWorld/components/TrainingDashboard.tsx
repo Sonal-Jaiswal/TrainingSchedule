@@ -3,8 +3,6 @@ import * as React from "react";
 
 // Fluent UI provides the buttons, fields, messages, and loading indicator.
 import {
- PrimaryButton,
- DefaultButton,
  TextField,
  Dropdown,
  IDropdownOption,
@@ -50,6 +48,12 @@ import "@pnp/sp/site-users/web";
 
 
 // Main component for browsing, enrolling in, and managing trainings.
+import Header from "./Header";
+import TrainingList from "./TrainingList";
+import EnrollmentModal from "./EnrollmentModal";
+import TrainingForm from "./TrainingForm";
+import AdminBoard from "./AdminBoard";
+
 const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  // Stores the configured PnPjs client for SharePoint requests.
  const [sp, setSp] = React.useState<SPFI | null>(null);
@@ -90,9 +94,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  const [selectedTraining, setSelectedTraining] =
    React.useState<ITraining | null>(null);
 
- // Controls whether the enrollment confirmation modal is visible.
- const [showEnrollForm, setShowEnrollForm] =
-   React.useState<boolean>(false);
+ // (modal visibility is driven by `selectedTraining`)
 
  // Controls whether My Courses or the training catalog is displayed.
  const [showMyCourses, setShowMyCourses] =
@@ -551,8 +553,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        );
        return;
      }
-     setSelectedTraining(training);
-     setShowEnrollForm(true);
+    setSelectedTraining(training);
      setError("");
      setSuccess("");
    };
@@ -597,7 +598,6 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          selectedTraining.TrainingName +
          "."
        );
-       setShowEnrollForm(false);
        setSelectedTraining(null);
      }
      catch (err) {
@@ -724,727 +724,101 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  // Closes the enrollment confirmation modal and clears its selection.
  const closeEnrollmentModal =
    (): void => {
-     setShowEnrollForm(false);
      setSelectedTraining(null);
      setError("");
    };
 
  // Show a loading panel until the initial SharePoint request completes.
- if (loading) {
-   return (
-<div style={styles.page}>
-<div
-         style={{
-           backgroundColor: "#ffffff",
-           padding: "50px",
-           borderRadius: "12px",
-           textAlign: "center"
-         }}
->
-<Spinner
-           size={SpinnerSize.large}
-           label={
-             "Loading training data from SharePoint..."
-           }
-         />
-</div>
-</div>
-   );
- }
+if (loading) {
+  return (
+    <div style={styles.page}>
+      <div style={{ backgroundColor: "#ffffff", padding: 50, borderRadius: 12, textAlign: "center" }}>
+        <Spinner size={SpinnerSize.large} label={"Loading training data from SharePoint..."} />
+      </div>
+    </div>
+  );
+}
 
- // Render the dashboard after the initial data load is complete.
- return (
-<div style={styles.page}>
-     {/* ================================================== */}
-     {/* HEADER */}
-     {/* ================================================== */}
-<div style={styles.header}>
-<div>
-<h1 style={styles.headerTitle}>
-           {userRole} Training Dashboard
-</h1>
-<p style={styles.headerSubtitle}>
-           Discover and enroll in internal
-           training programs as a {userRole.toLowerCase()}
-</p>
-</div>
-<div style={styles.userBadge}>
-<button
-         type="button"
-         aria-label="Open profile"
-         title={employeeName || "Open profile"}
-         onClick={() => setShowProfile(!showProfile)}
-         style={styles.avatarButton}
-       >
-         {employeeInitials}
-</button>
-       {showProfile && (
-<div style={styles.profilePanel}>
-<p style={styles.profileName}>
-           {employeeName || "User"}
-</p>
-<p style={styles.profileLabel}>
-           Role: {userRole}
-</p>
-</div>
-       )}
-       {userRole !== "Admin" && (
-         <DefaultButton
-           text={showMyCourses ? "All Trainings" : "My Courses"}
-           onClick={() => setShowMyCourses(!showMyCourses)}
-           styles={{
-             root: {
-               borderRadius: "6px"
-             },
-             rootHovered: {
-               borderRadius: "6px"
-             }
-           }}
-         />
-       )}
-       {userRole === "Admin" && (
-         <DefaultButton
-           text={showAdminBoard ? "Training Catalog" : "Admin Board"}
-           onClick={() => {
-             setShowAdminBoard(!showAdminBoard);
-             setShowMyCourses(false);
-           }}
-           styles={{
-             root: { borderRadius: "6px" },
-             rootHovered: { borderRadius: "6px" }
-           }}
-         />
-       )}
-     </div>
+// Render the dashboard using modular components.
+return (
+  <div style={styles.page}>
+    <div style={styles.header}>
+      <Header
+        userRole={userRole}
+        employeeName={employeeName}
+        employeeInitials={employeeInitials}
+        showProfile={showProfile}
+        setShowProfile={setShowProfile}
+        showMyCourses={showMyCourses}
+        toggleMyCourses={() => setShowMyCourses(!showMyCourses)}
+        showAdminBoard={showAdminBoard}
+        toggleAdminBoard={() => { setShowAdminBoard(!showAdminBoard); setShowMyCourses(false); }}
+        onOpenTrainingForm={openTrainingForm}
+        setError={setError}
+      />
+
+      {showProfile && (
+        <div style={styles.profilePanel}>
+          <p style={styles.profileName}>{employeeName || "User"}</p>
+          <p style={styles.profileLabel}>Role: {userRole}</p>
+        </div>
+      )}
     </div>
 
-     {/* ================================================== */}
-     {/* ERROR */}
-     {/* ================================================== */}
-     {error && (
-<div
-         style={{
-           marginBottom: "20px"
-         }}
->
-<MessageBar
-           messageBarType={
-             MessageBarType.error
-           }
-           isMultiline={true}
-           onDismiss={() =>
-             setError("")
-           }
->
-           {error}
-</MessageBar>
-</div>
-     )}
+    {error && (
+      <div style={{ marginBottom: 20 }}>
+        <MessageBar messageBarType={MessageBarType.error} isMultiline={true} onDismiss={() => setError("")}>{error}</MessageBar>
+      </div>
+    )}
 
-     {/* ================================================== */}
-     {/* SUCCESS */}
-     {/* ================================================== */}
-     {success && (
-<div
-         style={{
-           marginBottom: "20px"
-         }}
->
-<MessageBar
-           messageBarType={
-             MessageBarType.success
-           }
-           onDismiss={() =>
-             setSuccess("")
-           }
->
-           {success}
-</MessageBar>
-</div>
-     )}
+    {success && (
+      <div style={{ marginBottom: 20 }}>
+        <MessageBar messageBarType={MessageBarType.success} onDismiss={() => setSuccess("")}>{success}</MessageBar>
+      </div>
+    )}
 
-     {/* ================================================== */}
-     {/* STATISTICS */}
-     {/* ================================================== */}
-<div style={styles.statsContainer}>
-<div style={styles.statCard}>
-<div style={styles.statNumber}>
-           {totalTrainings}
-</div>
-<div style={styles.statLabel}>
-           Total Available Trainings
-</div>
-</div>
+    <div style={styles.statsContainer}>
+      <div style={styles.statCard}><div style={styles.statNumber}>{totalTrainings}</div><div style={styles.statLabel}>Total Available Trainings</div></div>
+      <div style={styles.statCard}><div style={styles.statNumber}>{activeTrainings}</div><div style={styles.statLabel}>Active Trainings</div></div>
+      <div style={styles.statCard}><div style={styles.statNumber}>{totalSeats}</div><div style={styles.statLabel}>Available Seats</div></div>
+    </div>
 
-<div style={styles.statCard}>
-<div style={styles.statNumber}>
-           {activeTrainings}
-</div>
-<div style={styles.statLabel}>
-           Active Trainings
-</div>
-</div>
+    {showAdminBoard && userRole === "Admin" && (
+      <AdminBoard trainings={trainings} enrollments={enrollments} userRole={userRole} submitting={submitting} onDeleteTraining={deleteTraining} />
+    )}
 
-<div style={styles.statCard}>
-<div style={styles.statNumber}>
-           {totalSeats}
-</div>
-<div style={styles.statLabel}>
-           Available Seats
-</div>
-</div>
+    {showMyCourses && (
+      <div style={styles.section}>
+        <MyCourses courses={myCourses} submitting={submitting} onCancel={cancelCourse} />
+      </div>
+    )}
 
-</div>
+    {!showMyCourses && !showAdminBoard && (
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Available Trainings</h2>
 
-     {/* ================================================== */}
-     {/* MY COURSES */}
-     {/* ================================================== */}
-{showAdminBoard && userRole === "Admin" && <div style={styles.section}>
-<h2 style={styles.sectionTitle}>Admin Board</h2>
-<div style={styles.statsContainer}>
-<div style={styles.statCard}>
-<div style={styles.statNumber}>{enrollments.length}</div>
-<div style={styles.statLabel}>Total Registrations</div>
-</div>
-<div style={styles.statCard}>
-<div style={styles.statNumber}>
-           {enrollments.filter((enrollment: IEnrollment) =>
-             enrollment.Status.toLowerCase() !== "cancelled").length}
-</div>
-<div style={styles.statLabel}>Active Registrations</div>
-</div>
-<div style={styles.statCard}>
-<div style={styles.statNumber}>
-           {enrollments.filter((enrollment: IEnrollment) =>
-             enrollment.CompletionStatus.toLowerCase() === "completed").length}
-</div>
-<div style={styles.statLabel}>Completed Courses</div>
-</div>
-</div>
-<div style={{
-         display: "flex",
-         gap: "10px",
-         marginBottom: "20px",
-         flexWrap: "wrap"
-       }}>
-    {userRole === "Admin" && <PrimaryButton
-         text="Create Training"
-      onClick={openTrainingForm}
-    />}
-    {userRole === "Admin" && <DefaultButton
-      text="Manage Training"
-      onClick={() => {
-        setShowAdminBoard(true);
-        setShowMyCourses(false);
-      }}
-    />}
-  {userRole === "Admin" && <DefaultButton
-         text="Manage Users"
-         onClick={() => setError("User role management page is not configured yet.")}
-  />}
-</div>
-<h3 style={styles.sectionTitle}>Training Management</h3>
-<div style={{ overflowX: "auto", marginBottom: "28px" }}>
-<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-<thead>
-<tr style={{ textAlign: "left", borderBottom: "2px solid #d9e2e7" }}>
-<th style={{ padding: "10px" }}>Training</th>
-<th style={{ padding: "10px" }}>Status</th>
-<th style={{ padding: "10px" }}>Seats</th>
-<th style={{ padding: "10px" }}>Action</th>
-</tr>
-</thead>
-<tbody>
-           {trainings.map((training: ITraining) => (
-<tr key={training.Id} style={{ borderBottom: "1px solid #edebe9" }}>
-<td style={{ padding: "10px" }}>{training.TrainingName}</td>
-<td style={{ padding: "10px" }}>{training.Status}</td>
-<td style={{ padding: "10px" }}>{training.AvailableSeats}</td>
-<td style={{ padding: "10px" }}>
-       {userRole === "Admin" && <DefaultButton
-                 text="Delete"
-                 disabled={submitting}
-                 onClick={() => deleteTraining(training)}
-               />}
-</td>
-</tr>
-           ))}
-</tbody>
-</table>
-</div>
-<h3 style={styles.sectionTitle}>All Registrations</h3>
-<div style={{ overflowX: "auto" }}>
-<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-<thead>
-<tr style={{ textAlign: "left", borderBottom: "2px solid #d9e2e7" }}>
-<th style={{ padding: "10px" }}>Employee</th>
-<th style={{ padding: "10px" }}>Training</th>
-<th style={{ padding: "10px" }}>Status</th>
-<th style={{ padding: "10px" }}>Completion</th>
-</tr>
-</thead>
-<tbody>
-           {enrollments.map((enrollment: IEnrollment) => (
-<tr key={enrollment.Id} style={{ borderBottom: "1px solid #edebe9" }}>
-<td style={{ padding: "10px" }}>{enrollment.Employee}</td>
-<td style={{ padding: "10px" }}>{enrollment.Training}</td>
-<td style={{ padding: "10px" }}>{enrollment.Status}</td>
-<td style={{ padding: "10px" }}>{enrollment.CompletionStatus}</td>
-</tr>
-           ))}
-</tbody>
-</table>
-</div>
-</div>}
-{showMyCourses && <div style={styles.section}>
-       <MyCourses
-         courses={myCourses}
-         submitting={submitting}
-         onCancel={cancelCourse}
-       />
-</div>}
+        <div style={styles.filterContainer}>
+          <TextField label="Search Training" placeholder={"Search by training name or description"} value={searchText} onChange={(_ev, v) => setSearchText(v || "")} />
+          <Dropdown label="Category" selectedKey={selectedCategory} options={categories} onChange={(_ev, option) => { if (option) setSelectedCategory(option.key as string); }} />
+        </div>
 
-     {/* ================================================== */}
-     {/* TRAININGS */}
-     {/* ================================================== */}
-{!showMyCourses && !showAdminBoard && <div style={styles.section}>
-<h2 style={styles.sectionTitle}>
-         Available Trainings
-</h2>
+        <TrainingList trainings={filteredTrainings} userRole={userRole} onEnroll={openEnrollment} />
 
-       {/* SEARCH + CATEGORY */}
-<div style={styles.filterContainer}>
-<TextField
-           label="Search Training"
-           placeholder={
-             "Search by training name or description"
-           }
-           value={searchText}
-           onChange={
-             (
-               _event,
-               value
-             ) =>
-               setSearchText(
-                 value || ""
-               )
-           }
-         />
+        {filteredTrainings.length === 0 && (
+          <div style={styles.noResults}><h3>No trainings found</h3><p>Try changing your search or category.</p></div>
+        )}
+      </div>
+    )}
 
-<Dropdown
-           label="Category"
-           selectedKey={
-             selectedCategory
-           }
-           options={categories}
-           onChange={
-             (
-               _event,
-               option
-             ) => {
-               if (option) {
-                 setSelectedCategory(
-                   option.key as string
-                 );
-               }
-             }
-           }
-         />
-</div>
+    <EnrollmentModal selectedTraining={selectedTraining} employeeName={employeeName} submitting={submitting} onConfirm={submitEnrollment} onCancel={closeEnrollmentModal} />
 
-       {/* TRAINING CARDS */}
-<div style={styles.trainingGrid}>
-         {filteredTrainings.map(
-           (
-             training: ITraining
-           ) => (
-<div
-               key={training.Id}
-               style={styles.trainingCard}
->
-               {/* CARD HEADER */}
-<div
-                 style={styles.trainingHeader}
->
-<h3
-                   style={
-                     styles.trainingTitle
-                   }
->
-                   {training.TrainingName}
-</h3>
+    {showTrainingForm && userRole === "Admin" && (
+      <TrainingForm trainingForm={trainingForm} setTrainingForm={setTrainingForm} categoryOptions={trainingCategoryOptions} submitting={submitting} onSubmit={submitTraining} onCancel={closeTrainingForm} />
+    )}
 
-<span
-                   style={
-                     training.Status
-                       .toLowerCase() ===
-                     "active"
-                       ? styles.activeBadge
-                       : styles.inactiveBadge
-                   }
->
-                   {training.Status}
-</span>
-</div>
-
-               {/* DESCRIPTION */}
-<p
-                 style={
-                   styles.description
-                 }
->
-                 {training.Description}
-</p>
-
-               {/* DETAILS */}
-<div style={styles.details}>
-<div
-                   style={styles.detailRow}
->
-<span
-                     style={
-                       styles.detailLabel
-                     }
->
-                     Category
-</span>
-<span
-                     style={
-                       styles.detailValue
-                     }
->
-                     {training.Category}
-</span>
-</div>
-
-<div
-                   style={styles.detailRow}
->
-<span
-                     style={
-                       styles.detailLabel
-                     }
->
-                     Trainer
-</span>
-<span
-                     style={
-                       styles.detailValue
-                     }
->
-                     {training.Trainer}
-</span>
-</div>
-
-<div
-                   style={styles.detailRow}
->
-<span
-                     style={
-                       styles.detailLabel
-                     }
->
-                     Training Date
-</span>
-<span
-                     style={
-                       styles.detailValue
-                     }
->
-                     {
-                       training.TrainingDate
-                         ? new Date(
-                             training.TrainingDate
-                           ).toLocaleDateString()
-                         : "Not specified"
-                     }
-</span>
-</div>
-
-<div
-                   style={styles.detailRow}
->
-<span
-                     style={
-                       styles.detailLabel
-                     }
->
-                     Available Seats
-</span>
-<span
-                     style={{
-                       ...styles.detailValue,
-                       fontWeight: 600
-                     }}
->
-                     {
-                       training.AvailableSeats
-                     }
-</span>
-</div>
-</div>
-
-               {/* ENROLL BUTTON */}
-             {userRole === "Employee" && <PrimaryButton
-                 text={
-                   training.AvailableSeats > 0
-                     ? "Enroll Now"
-                     : "Fully Booked"
-                 }
-                 disabled={
-                   training.AvailableSeats <= 0
-                 }
-                 onClick={() =>
-                   openEnrollment(
-                     training
-                   )
-                 }
-                 styles={{
-                   root: {
-                     width: "100%",
-                     borderRadius: "6px"
-                   }
-                 }}
-               />}
-</div>
-           )
-         )}
-</div>
-
-       {/* NO RESULTS */}
-       {filteredTrainings.length === 0 && (
-<div
-           style={styles.noResults}
->
-<h3>
-             No trainings found
-</h3>
-<p>
-             Try changing your search
-             or category.
-</p>
-</div>
-       )}
-    </div>}
-
-     {/* ================================================== */}
-     {/* ENROLLMENT MODAL */}
-     {/* ================================================== */}
-     {showEnrollForm &&
-       selectedTraining && (
-<div
-           style={styles.overlay}
->
-<div
-             style={styles.modal}
->
-<h2
-               style={
-                 styles.modalTitle
-               }
->
-               Confirm Enrollment
-</h2>
-
-             {/* TRAINING INFORMATION */}
-<div
-               style={
-                 styles.modalTraining
-               }
->
-<h3
-                 style={{
-                   margin:
-                     "0 0 12px 0",
-                   color: "#007f86"
-                 }}
->
-                 {
-                   selectedTraining.TrainingName
-                 }
-</h3>
-
-<p
-                 style={
-                   styles.modalDetail
-                 }
->
-<strong>
-                   Category:
-</strong>{" "}
-                 {
-                   selectedTraining.Category
-                 }
-</p>
-
-<p
-                 style={
-                   styles.modalDetail
-                 }
->
-<strong>
-                   Trainer:
-</strong>{" "}
-                 {
-                   selectedTraining.Trainer
-                 }
-</p>
-
-<p
-                 style={
-                   styles.modalDetail
-                 }
->
-<strong>
-                   Date:
-</strong>{" "}
-                 {
-                   selectedTraining.TrainingDate
-                     ? new Date(
-                         selectedTraining.TrainingDate
-                       ).toLocaleDateString()
-                     : "Not specified"
-                 }
-</p>
-
-<p
-                 style={
-                   styles.modalDetail
-                 }
->
-<strong>
-                   Available Seats:
-</strong>{" "}
-                 {
-                   selectedTraining.AvailableSeats
-                 }
-</p>
-</div>
-
-             {/* EMPLOYEE */}
-<p
-               style={
-                 styles.modalDetail
-               }
->
-<strong>
-                 Employee:
-</strong>{" "}
-               {employeeName}
-</p>
-
-<p
-               style={{
-                 fontSize: "13px",
-                 color: "#52666d"
-               }}
->
-               Your enrollment will be saved
-               directly to the SharePoint
-               Enrollments-SAR list.
-</p>
-
-             {/* BUTTONS */}
-<div
-               style={
-                 styles.modalButtons
-               }
->
-<PrimaryButton
-                 text={
-                   submitting
-                     ? "Submitting..."
-                     : "Confirm Enrollment"
-                 }
-                 disabled={submitting}
-                 onClick={
-                   submitEnrollment
-                 }
-               />
-
-<DefaultButton
-                 text="Cancel"
-                 disabled={submitting}
-                 onClick={
-                   closeEnrollmentModal
-                 }
-               />
-</div>
-</div>
-</div>
-       )}
-
-     {showTrainingForm && userRole === "Admin" && (
-<div style={styles.overlay}>
-<div style={styles.modal}>
-<h2 style={styles.modalTitle}>Create Training</h2>
-<TextField
-  label="Training name"
-  required
-  value={trainingForm.TrainingName}
-  onChange={(_event, value) => setTrainingForm({ ...trainingForm, TrainingName: value || "" })}
-/>
-<TextField
-  label="Description"
-  multiline
-  value={trainingForm.Description}
-  onChange={(_event, value) => setTrainingForm({ ...trainingForm, Description: value || "" })}
-/>
-<Dropdown
-  label="Category"
-  required
-  placeholder="Select a category"
-  selectedKey={trainingForm.Category || undefined}
-  options={trainingCategoryOptions}
-  onChange={(_event, option) => setTrainingForm({
-    ...trainingForm,
-    Category: option ? String(option.key) : ""
-  })}
-/>
-<TextField
-  label="Trainer"
-  required
-  value={trainingForm.Trainer}
-  onChange={(_event, value) => setTrainingForm({ ...trainingForm, Trainer: value || "" })}
-/>
-<TextField
-  label="Training date"
-  type="date"
-  required
-  value={trainingForm.TrainingDate}
-  onChange={(_event, value) => setTrainingForm({ ...trainingForm, TrainingDate: value || "" })}
-/>
-<TextField
-  label="Available seats"
-  type="number"
-  min={0}
-  value={String(trainingForm.AvailableSeats)}
-  onChange={(_event, value) => setTrainingForm({ ...trainingForm, AvailableSeats: Number(value || 0) })}
-/>
-<div style={styles.modalButtons}>
-<PrimaryButton
-  text={submitting ? "Creating..." : "Create Training"}
-  disabled={submitting}
-  onClick={submitTraining}
-/>
-<DefaultButton
-  text="Cancel"
-  disabled={submitting}
-  onClick={closeTrainingForm}
-/>
-</div>
-</div>
-</div>
-     )}
-
-     {/* ================================================== */}
-     {/* FOOTER */}
-     {/* ================================================== */}
-<div style={styles.footer}>
-       Training data powered by SharePoint & PnPjs
-</div>
-</div>
- );
+    <div style={styles.footer}>Training data powered by SharePoint & PnPjs</div>
+  </div>
+);
 };
 
 // ============================================================
