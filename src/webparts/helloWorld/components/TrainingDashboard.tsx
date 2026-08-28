@@ -28,9 +28,7 @@ import {
 } from "./TrainingModels";
 
 import {
- TrainingService,
- canManageTrainings,
- canDeleteTrainings
+ TrainingService
 } from "./TrainingService";
 
 // Creates a PnPjs client connected to the current SharePoint site.
@@ -90,6 +88,10 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 
  // Controls whether My Courses or the training catalog is displayed.
  const [showMyCourses, setShowMyCourses] =
+   React.useState<boolean>(false);
+
+ // Controls the Admin-only management and reporting view.
+ const [showAdminBoard, setShowAdminBoard] =
    React.useState<boolean>(false);
 
  // Stores the display name of the current SharePoint user.
@@ -826,6 +828,28 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      }
    };
 
+ const deleteTraining = async (training: ITraining): Promise<void> => {
+   if (!sp || userRole !== "Admin" ||
+     !window.confirm("Delete this training?")) {
+     return;
+   }
+
+   try {
+     setSubmitting(true);
+     const trainingService: TrainingService = new TrainingService(sp);
+     await trainingService.deleteTraining(training.Id, userRole);
+     await loadTrainings(sp);
+     setSuccess("Training deleted successfully.");
+   }
+   catch (err) {
+     console.error("Training deletion error:", err);
+     setError("Unable to delete this training.");
+   }
+   finally {
+     setSubmitting(false);
+   }
+ };
+
  // Closes the enrollment confirmation modal and clears its selection.
  const closeEnrollmentModal =
    (): void => {
@@ -905,6 +929,19 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
            }
          }}
        />
+       {userRole === "Admin" && (
+<DefaultButton
+         text={showAdminBoard ? "Training Catalog" : "Admin Board"}
+         onClick={() => {
+           setShowAdminBoard(!showAdminBoard);
+           setShowMyCourses(false);
+         }}
+         styles={{
+           root: { borderRadius: "6px" },
+           rootHovered: { borderRadius: "6px" }
+         }}
+       />
+       )}
 </div>
     </div>
 
@@ -961,28 +998,6 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 <div style={styles.statNumber}>
            {totalTrainings}
 </div>
-
-  {canManageTrainings(userRole) && (
-<div style={{
-    display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
-    flexWrap: "wrap"
-  }}>
-<DefaultButton
-      text="Create Training"
-      onClick={() => setError("Training creation form is not configured yet.")}
-      styles={{ root: { borderRadius: "6px" } }}
-    />
-    {canDeleteTrainings(userRole) && (
-<DefaultButton
-     text="Manage Users"
-     onClick={() => setError("User role management page is not configured yet.")}
-     styles={{ root: { borderRadius: "6px" } }}
-      />
-    )}
-</div>
-  )}
 <div style={styles.statLabel}>
            Total Available Trainings
 </div>
@@ -1011,6 +1026,96 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      {/* ================================================== */}
      {/* MY COURSES */}
      {/* ================================================== */}
+{showAdminBoard && userRole === "Admin" && <div style={styles.section}>
+<h2 style={styles.sectionTitle}>Admin Board</h2>
+<div style={styles.statsContainer}>
+<div style={styles.statCard}>
+<div style={styles.statNumber}>{enrollments.length}</div>
+<div style={styles.statLabel}>Total Registrations</div>
+</div>
+<div style={styles.statCard}>
+<div style={styles.statNumber}>
+           {enrollments.filter((enrollment: IEnrollment) =>
+             enrollment.Status.toLowerCase() !== "cancelled").length}
+</div>
+<div style={styles.statLabel}>Active Registrations</div>
+</div>
+<div style={styles.statCard}>
+<div style={styles.statNumber}>
+           {enrollments.filter((enrollment: IEnrollment) =>
+             enrollment.CompletionStatus.toLowerCase() === "completed").length}
+</div>
+<div style={styles.statLabel}>Completed Courses</div>
+</div>
+</div>
+<div style={{
+         display: "flex",
+         gap: "10px",
+         marginBottom: "20px",
+         flexWrap: "wrap"
+       }}>
+<PrimaryButton
+         text="Create Training"
+         onClick={() => setError("Training creation form is not configured yet.")}
+       />
+<DefaultButton
+         text="Manage Users"
+         onClick={() => setError("User role management page is not configured yet.")}
+       />
+</div>
+<h3 style={styles.sectionTitle}>Training Management</h3>
+<div style={{ overflowX: "auto", marginBottom: "28px" }}>
+<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+<thead>
+<tr style={{ textAlign: "left", borderBottom: "2px solid #d9e2e7" }}>
+<th style={{ padding: "10px" }}>Training</th>
+<th style={{ padding: "10px" }}>Status</th>
+<th style={{ padding: "10px" }}>Seats</th>
+<th style={{ padding: "10px" }}>Action</th>
+</tr>
+</thead>
+<tbody>
+           {trainings.map((training: ITraining) => (
+<tr key={training.Id} style={{ borderBottom: "1px solid #edebe9" }}>
+<td style={{ padding: "10px" }}>{training.TrainingName}</td>
+<td style={{ padding: "10px" }}>{training.Status}</td>
+<td style={{ padding: "10px" }}>{training.AvailableSeats}</td>
+<td style={{ padding: "10px" }}>
+<DefaultButton
+                 text="Delete"
+                 disabled={submitting}
+                 onClick={() => deleteTraining(training)}
+               />
+</td>
+</tr>
+           ))}
+</tbody>
+</table>
+</div>
+<h3 style={styles.sectionTitle}>All Registrations</h3>
+<div style={{ overflowX: "auto" }}>
+<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+<thead>
+<tr style={{ textAlign: "left", borderBottom: "2px solid #d9e2e7" }}>
+<th style={{ padding: "10px" }}>Employee</th>
+<th style={{ padding: "10px" }}>Training</th>
+<th style={{ padding: "10px" }}>Status</th>
+<th style={{ padding: "10px" }}>Completion</th>
+</tr>
+</thead>
+<tbody>
+           {enrollments.map((enrollment: IEnrollment) => (
+<tr key={enrollment.Id} style={{ borderBottom: "1px solid #edebe9" }}>
+<td style={{ padding: "10px" }}>{enrollment.Employee}</td>
+<td style={{ padding: "10px" }}>{enrollment.Training}</td>
+<td style={{ padding: "10px" }}>{enrollment.Status}</td>
+<td style={{ padding: "10px" }}>{enrollment.CompletionStatus}</td>
+</tr>
+           ))}
+</tbody>
+</table>
+</div>
+</div>}
 {showMyCourses && <div style={styles.section}>
        <MyCourses
          courses={myCourses}
@@ -1022,7 +1127,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      {/* ================================================== */}
      {/* TRAININGS */}
      {/* ================================================== */}
-{!showMyCourses && <div style={styles.section}>
+{!showMyCourses && !showAdminBoard && <div style={styles.section}>
 <h2 style={styles.sectionTitle}>
          Available Trainings
 </h2>

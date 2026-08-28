@@ -40,19 +40,29 @@ export class TrainingService {
      return "Employee";
    }
 
-   const roles: Array<{
+   let roles: Array<{
      UserEmail?: string;
      UserName?: string;
      Role?: string;
-     IsActive?: boolean;
-   }> = await this.sp.web.lists
-     .getByTitle("UserRoles-SAR")
-     .items
-     .select("UserEmail", "UserName", "Role", "IsActive")
-     .filter("UserEmail eq '" + email.replace(/'/g, "''") + "' and IsActive eq 1")();
+       isActive?: boolean;
+   }> = [];
+   try {
+     roles = await this.sp.web.lists
+       .getByTitle("UserRoles-SAR")
+       .items
+      .select("UserEmail", "UserName", "Role", "isActive")
+      .filter("UserEmail eq '" + email.replace(/'/g, "''") + "' and isActive eq 1")();
+   }
+   catch (error) {
+     console.warn(
+       "UserRoles-SAR could not be read. Defaulting the user to Employee.",
+       error
+     );
+     return "Employee";
+   }
 
    const roleRecord: IUserRole | undefined = roles
-     .filter((item) => item.IsActive === true &&
+    .filter((item) => item.isActive === true &&
        (item.Role === "Admin" || item.Role === "HR"))
      .map((item): IUserRole => ({
        UserEmail: item.UserEmail || "",
