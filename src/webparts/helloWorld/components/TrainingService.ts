@@ -98,7 +98,9 @@ export class TrainingService {
      Id: item.Id,
      TrainingName: item.Title || "",
      Description: item.Description || "",
-     Category: item.Category || "",
+     Category: Array.isArray(item.Category)
+       ? item.Category.join(", ")
+       : item.Category || "",
      Trainer: item.Trainer || "",
      TrainingDate: item.TrainingDate || "",
      AvailableSeats: Number(item.AvailableSeats || 0),
@@ -111,9 +113,12 @@ export class TrainingService {
    await this.sp.web.lists.getByTitle("Trainings-SAR").items.add({
      Title: training.TrainingName,
      Description: training.Description,
-     Category: training.Category,
+     Category: (training.Category || "")
+       .split(",")
+       .map((category: string) => category.trim())
+       .filter((category: string) => category.length > 0),
      Trainer: training.Trainer,
-     TrainingDate: training.TrainingDate,
+     TrainingDate: training.TrainingDate || null,
      AvailableSeats: training.AvailableSeats,
      Status: training.Status
    });
@@ -124,7 +129,10 @@ export class TrainingService {
    await this.sp.web.lists.getByTitle("Trainings-SAR").items.getById(id).update({
      Title: training.TrainingName,
      Description: training.Description,
-     Category: training.Category,
+     Category: (training.Category || "")
+       .split(",")
+       .map((category: string) => category.trim())
+       .filter((category: string) => category.length > 0),
      Trainer: training.Trainer,
      TrainingDate: training.TrainingDate,
      AvailableSeats: training.AvailableSeats,

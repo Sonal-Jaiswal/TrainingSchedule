@@ -106,6 +106,30 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  const [showProfile, setShowProfile] =
    React.useState<boolean>(false);
 
+ // Controls the Admin training create form.
+ const [showTrainingForm, setShowTrainingForm] =
+   React.useState<boolean>(false);
+
+ const [trainingForm, setTrainingForm] =
+   React.useState<Omit<ITraining, "Id">>({
+     TrainingName: "",
+     Description: "",
+     Category: "",
+     Trainer: "",
+     TrainingDate: "",
+     AvailableSeats: 0,
+     Status: "Active"
+   });
+
+ const trainingCategoryOptions: IDropdownOption[] = [
+   { key: "Cloud", text: "Cloud" },
+   { key: "Analytics", text: "Analytics" },
+   { key: "Database", text: "Database" },
+   { key: "Security", text: "Security" },
+   { key: "AI", text: "AI" },
+   { key: "Others", text: "Others" }
+ ];
+
  const employeeInitials: string = employeeName
    .split(" ")
    .filter((namePart: string) => namePart.length > 0)
@@ -855,6 +879,58 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
    }
  };
 
+ const openTrainingForm = (): void => {
+   setTrainingForm({
+     TrainingName: "",
+     Description: "",
+     Category: "",
+     Trainer: "",
+     TrainingDate: "",
+     AvailableSeats: 0,
+     Status: "Active"
+   });
+   setShowTrainingForm(true);
+   setError("");
+   setSuccess("");
+ };
+
+ const submitTraining = async (): Promise<void> => {
+   if (!sp || userRole !== "Admin") {
+     return;
+   }
+   if (!trainingForm.TrainingName.trim() || !trainingForm.Category.trim() ||
+     !trainingForm.Trainer.trim() || !trainingForm.TrainingDate.trim() ||
+     trainingForm.AvailableSeats < 0) {
+     setError("Enter a training name, category, trainer, date, and valid seat count.");
+     return;
+   }
+
+   try {
+     setSubmitting(true);
+     setError("");
+     const trainingService: TrainingService = new TrainingService(sp);
+     await trainingService.createTraining(trainingForm, userRole);
+     await loadTrainings(sp);
+     setShowTrainingForm(false);
+     setSuccess("Training created successfully.");
+   }
+   catch (err) {
+     console.error("Training creation error:", err);
+     const sharePointError: string = err instanceof Error
+       ? err.message
+       : "Unknown SharePoint error";
+     setError("Unable to create training: " + sharePointError);
+   }
+   finally {
+     setSubmitting(false);
+   }
+ };
+
+ const closeTrainingForm = (): void => {
+   setShowTrainingForm(false);
+   setError("");
+ };
+
  // Closes the enrollment confirmation modal and clears its selection.
  const closeEnrollmentModal =
    (): void => {
@@ -1061,9 +1137,16 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          marginBottom: "20px",
          flexWrap: "wrap"
        }}>
-  {userRole === "Admin" && <PrimaryButton
+    {userRole === "Admin" && <PrimaryButton
          text="Create Training"
-         onClick={() => setError("Training creation form is not configured yet.")}
+      onClick={openTrainingForm}
+    />}
+    {userRole === "Admin" && <DefaultButton
+      text="Manage Training"
+      onClick={() => {
+        setShowAdminBoard(true);
+        setShowMyCourses(false);
+      }}
     />}
   {userRole === "Admin" && <DefaultButton
          text="Manage Users"
@@ -1500,6 +1583,69 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 </div>
 </div>
        )}
+
+     {showTrainingForm && userRole === "Admin" && (
+<div style={styles.overlay}>
+<div style={styles.modal}>
+<h2 style={styles.modalTitle}>Create Training</h2>
+<TextField
+  label="Training name"
+  required
+  value={trainingForm.TrainingName}
+  onChange={(_event, value) => setTrainingForm({ ...trainingForm, TrainingName: value || "" })}
+/>
+<TextField
+  label="Description"
+  multiline
+  value={trainingForm.Description}
+  onChange={(_event, value) => setTrainingForm({ ...trainingForm, Description: value || "" })}
+/>
+<Dropdown
+  label="Category"
+  required
+  placeholder="Select a category"
+  selectedKey={trainingForm.Category || undefined}
+  options={trainingCategoryOptions}
+  onChange={(_event, option) => setTrainingForm({
+    ...trainingForm,
+    Category: option ? String(option.key) : ""
+  })}
+/>
+<TextField
+  label="Trainer"
+  required
+  value={trainingForm.Trainer}
+  onChange={(_event, value) => setTrainingForm({ ...trainingForm, Trainer: value || "" })}
+/>
+<TextField
+  label="Training date"
+  type="date"
+  required
+  value={trainingForm.TrainingDate}
+  onChange={(_event, value) => setTrainingForm({ ...trainingForm, TrainingDate: value || "" })}
+/>
+<TextField
+  label="Available seats"
+  type="number"
+  min={0}
+  value={String(trainingForm.AvailableSeats)}
+  onChange={(_event, value) => setTrainingForm({ ...trainingForm, AvailableSeats: Number(value || 0) })}
+/>
+<div style={styles.modalButtons}>
+<PrimaryButton
+  text={submitting ? "Creating..." : "Create Training"}
+  disabled={submitting}
+  onClick={submitTraining}
+/>
+<DefaultButton
+  text="Cancel"
+  disabled={submitting}
+  onClick={closeTrainingForm}
+/>
+</div>
+</div>
+</div>
+     )}
 
      {/* ================================================== */}
      {/* FOOTER */}
