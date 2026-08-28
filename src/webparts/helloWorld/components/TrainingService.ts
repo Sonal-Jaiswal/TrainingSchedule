@@ -38,29 +38,22 @@ export class TrainingService {
      .trim()
      .toLowerCase();
 
+   console.log("[TrainingService] Current user email:", userEmail);
+
    if (!userEmail) {
      return "Employee";
    }
 
    let roles: Array<{
-     UserEmail?: string;
-     UserName?: string;
+     Title?: string;
      Role?: string;
-       isActive?: boolean;
    }> = [];
    try {
-     try {
-       roles = await this.sp.web.lists
-         .getByTitle("UserRoles-SAR")
-         .items
-        .select("UserEmail", "UserName", "Role")();
-     }
-    catch {
-       roles = await this.sp.web.lists
-         .getByTitle("UserRolesSAR")
-         .items
-         .select("UserEmail", "UserName", "Role")();
-     }
+     roles = await this.sp.web.lists
+       .getByTitle("UserRoles-SAR")
+       .items
+       .select("Title", "Role")();
+     console.log("[TrainingService] Fetched roles:", roles);
    }
    catch (error) {
      console.warn(
@@ -72,21 +65,24 @@ export class TrainingService {
 
    const roleRecord: IUserRole | undefined = roles
       .filter((item) => {
-      const roleEmail: string = (item.UserEmail || "").trim().toLowerCase();
-      const normalizedRole: string = (item.Role || "").trim().toLowerCase();
+    const roleEmail: string = (item.Title || "").trim().toLowerCase();
+    const normalizedRole: string = (item.Role || "").trim().toLowerCase();
+      console.log(`[TrainingService] Comparing: "${roleEmail}" === "${userEmail}" AND role "${normalizedRole}"`);
       return roleEmail === userEmail &&
         (normalizedRole === "admin" || normalizedRole === "hr");
     })
      .map((item): IUserRole => ({
-       UserEmail: item.UserEmail || "",
-       UserName: item.UserName || "",
+       UserEmail: item.Title || "",
+       UserName: item.Title || "",
        Role: (item.Role || "").trim().toLowerCase() === "admin"
          ? "Admin"
          : "HR",
       IsActive: true
     }))[0];
 
-   return roleRecord ? roleRecord.Role : "Employee";
+   const finalRole = roleRecord ? roleRecord.Role : "Employee";
+   console.log("[TrainingService] Final role assigned:", finalRole);
+   return finalRole;
  }
 
  public async getTrainings(): Promise<ITraining[]> {

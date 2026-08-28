@@ -61,5 +61,9 @@ export default class HelloWorldWebPart
  return super.onInit();
 }
 
+  protected onDispose(): void {
+    ReactDom.unmountComponentAtNode(this.domElement);
+  }
+
 }
  

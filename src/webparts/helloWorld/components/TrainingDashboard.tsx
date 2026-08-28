@@ -484,6 +484,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        const role: UserRole =
          await trainingService.getCurrentUserRole();
        setUserRole(role);
+       // Auto-show Admin Board for Admin users
+       if (role === "Admin") {
+         setShowAdminBoard(true);
+         setShowMyCourses(false);
+       }
        // Load Trainings
        await loadTrainings(sp);
        // Load Enrollments
@@ -917,30 +922,34 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
 </p>
 </div>
        )}
-<DefaultButton
-         text={showMyCourses ? "All Trainings" : "My Courses"}
-         onClick={() => setShowMyCourses(!showMyCourses)}
-         styles={{
-           root: {
-             borderRadius: "6px"
-           },
-           rootHovered: {
-             borderRadius: "6px"
-           }
-         }}
-       />
-<DefaultButton
-         text={showAdminBoard ? "Training Catalog" : "Admin Board"}
-         onClick={() => {
-           setShowAdminBoard(!showAdminBoard);
-           setShowMyCourses(false);
-         }}
-         styles={{
-           root: { borderRadius: "6px" },
-           rootHovered: { borderRadius: "6px" }
-         }}
-       />
-</div>
+       {userRole !== "Admin" && (
+         <DefaultButton
+           text={showMyCourses ? "All Trainings" : "My Courses"}
+           onClick={() => setShowMyCourses(!showMyCourses)}
+           styles={{
+             root: {
+               borderRadius: "6px"
+             },
+             rootHovered: {
+               borderRadius: "6px"
+             }
+           }}
+         />
+       )}
+       {userRole === "Admin" && (
+         <DefaultButton
+           text={showAdminBoard ? "Training Catalog" : "Admin Board"}
+           onClick={() => {
+             setShowAdminBoard(!showAdminBoard);
+             setShowMyCourses(false);
+           }}
+           styles={{
+             root: { borderRadius: "6px" },
+             rootHovered: { borderRadius: "6px" }
+           }}
+         />
+       )}
+     </div>
     </div>
 
      {/* ================================================== */}
@@ -1024,7 +1033,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      {/* ================================================== */}
      {/* MY COURSES */}
      {/* ================================================== */}
-{showAdminBoard && <div style={styles.section}>
+{showAdminBoard && userRole === "Admin" && <div style={styles.section}>
 <h2 style={styles.sectionTitle}>Admin Board</h2>
 <div style={styles.statsContainer}>
 <div style={styles.statCard}>
