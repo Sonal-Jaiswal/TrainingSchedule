@@ -1,4 +1,5 @@
-const styles: any = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const styles: { [key: string]: any } = {
   root: {},
   statsGrid: {
     display: "grid",

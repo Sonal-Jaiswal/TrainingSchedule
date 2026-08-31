@@ -265,6 +265,7 @@ const MyCourses: React.FC<IMyCoursesProps> = (props) => {
                 </div>
               </div>
 
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <DefaultButton text="Cancel Course" disabled={props.submitting} onClick={() => handleCancel(course)} styles={{ root: styles.cancelButton as any }} />
             </div>
           ))}

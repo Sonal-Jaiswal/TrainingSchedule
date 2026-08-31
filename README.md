@@ -26,7 +26,7 @@ Tech Stack
 Repository structure (important paths)
 - src/index.ts — web part entry
 - src/webparts/helloWorld/ — main web part source
-  - HelloWorldWebPart.ts — SPFx web part class
+  - HelloWorldWebPart.ts — SPFx web part class (TrainingPortalWebPart)
   - components/ — React components used by the web part
     - ui/ and component files (e.g., TrainingCard.tsx, TrainingDashboard.tsx)
     - styles/ — TypeScript style modules (e.g., TrainingCard.styles.ts)
@@ -69,9 +69,9 @@ Notes about the refactor
 - Duplicate code artifacts and unused imports were removed during the process.
 
 Where to look first
-- UI composition and main logic: src/webparts/helloWorld/components/TrainingDashboard.tsx
-- Training card (single item): src/webparts/helloWorld/components/TrainingCard.tsx
-- Styles: src/webparts/helloWorld/components/styles/
+- UI composition and main logic: src/webparts/trainingPortal/components/TrainingDashboard.tsx
+- Training card (single item): src/webparts/trainingPortal/components/TrainingCard.tsx
+- Styles: src/webparts/trainingPortal/components/styles/
 
 Want me to continue?
 If you'd like I can:

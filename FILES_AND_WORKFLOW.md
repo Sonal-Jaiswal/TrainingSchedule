@@ -15,10 +15,10 @@ Config folder
 
 Source code (main area)
 - `src/index.ts` — web part entry point that wires into SPFx bootstrap.
-- `src/webparts/helloWorld/HelloWorldWebPart.ts` — SPFx web part class; constructs the React root and supplies `WebPartContext`.
-- `src/webparts/helloWorld/HelloWorldWebPart.manifest.json` — SPFx manifest, web part metadata and permissions.
+- `src/webparts/trainingPortal/TrainingPortalWebPart.ts` — SPFx web part class (TrainingPortalWebPart); constructs the React root and supplies `WebPartContext`.
+- `src/webparts/trainingPortal/TrainingPortalWebPart.manifest.json` — SPFx manifest, web part metadata and permissions.
 
-Components folder: `src/webparts/helloWorld/components/`
+Components folder: `src/webparts/trainingPortal/components/`
 - `TrainingDashboard.tsx` — Main orchestrator: loads current user, trainings, enrollments, holds top-level state, routes between views (My Courses / Admin), and triggers data refreshes.
   Workflow: Edit to change high-level behavior, add data-loading logic, or change which child components render.
 
@@ -46,7 +46,7 @@ Components folder: `src/webparts/helloWorld/components/`
   - `TrainingModels.ts` — TypeScript interfaces for `ITraining`, `IEnrollment`, etc.
   Workflow: Modify service functions when changing list schema. Keep models in sync with lists.
 
-Styles folder: `src/webparts/helloWorld/components/styles/`
+Styles folder: `src/webparts/trainingPortal/components/styles/`
 - Files: `TrainingCard.styles.ts`, `MyCourses.styles.ts`, `TrainingDashboard.styles.ts`, etc.
 - Purpose: Export plain objects or small functions returning style objects. Components import these to keep styles out of JSX.
 - Workflow: Change spacing/colors here; run `npx tsc` and rebuild to verify.

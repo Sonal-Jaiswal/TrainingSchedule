@@ -13,7 +13,7 @@ import {
 } from "@fluentui/react";
 
 // Defines the properties received from the SharePoint web part.
-import { IHelloWorldProps } from "./IHelloWorldProps";
+import { ITrainingPortalProps } from "./ITrainingPortalProps";
 
 // Displays the current user's enrolled courses and progress.
 import MyCourses from "./MyCourses";
@@ -55,7 +55,7 @@ import TrainingForm from "./TrainingForm";
 import AdminBoard from "./AdminBoard";
 import styles from "./styles/TrainingDashboard.styles";
 
-const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
+const TrainingPortal: React.FC<ITrainingPortalProps> = (props) => {
  // Stores the configured PnPjs client for SharePoint requests.
  const [sp, setSp] = React.useState<SPFI | null>(null);
 
@@ -577,4 +577,4 @@ return (
 // ============================================================
 // EXPORT
 // ============================================================
-export default HelloWorld;
+export default TrainingPortal;

@@ -43,14 +43,14 @@ gulp bundle --ship
 2. Make small commits that each do one logical thing (e.g., "refactor: extract TrainingCard component").
 3. After each logical change run `npx tsc --noEmit -p tsconfig.json` to catch type errors early.
 4. If moving UI code into a new file, preserve existing props and behavior first, then adjust internals.
-5. When extracting styles, keep exact numeric/string values to avoid UI drift. Export style objects from `src/webparts/helloWorld/components/styles/*.styles.ts` and import them in the component.
+5. When extracting styles, keep exact numeric/string values to avoid UI drift. Export style objects from `src/webparts/trainingPortal/components/styles/*.styles.ts` and import them in the component.
 6. For Fluent UI `Button` `styles` props you may cast to `any` temporarily to avoid type friction: `styles={{ root: styles.myButton as any }}` — consider tightening types later.
 7. Run `gulp bundle` to ensure bundling works before raising a PR.
 8. Open a PR targeting the branch for review; include screenshots and short explanation.
 
 6. How I performed the major refactor (step-by-step)
 - Step A: Identify large files and inline styles (e.g., `TrainingDashboard.tsx`).
-- Step B: Create new component files under `src/webparts/helloWorld/components/` for each logical unit (`Header.tsx`, `TrainingList.tsx`, `TrainingCard.tsx`, `MyCourses.tsx`, `AdminBoard.tsx`).
+- Step B: Create new component files under `src/webparts/trainingPortal/components/` for each logical unit (`Header.tsx`, `TrainingList.tsx`, `TrainingCard.tsx`, `MyCourses.tsx`, `AdminBoard.tsx`).
 - Step C: Move JSX and relevant logic into the new component, keep props interface stable (e.g., `ITraining`), and export default the component.
 - Step D: Extract inline style objects into `components/styles/*.styles.ts` files. Import them as `import styles from './styles/TrainingCard.styles'`.
 - Step E: Run `npx tsc` repeatedly. Fix issues: remove duplicate code, fix imports, cast styles when necessary.
@@ -92,11 +92,11 @@ gulp package-solution --ship
 - Use browser devtools to inspect computed styles to confirm extraction preserved layout.
 
 12. Files to inspect first (for understanding)
-- `src/webparts/helloWorld/components/TrainingDashboard.tsx` — main orchestrator
-- `src/webparts/helloWorld/components/TrainingCard.tsx` — simple component + styles example
-- `src/webparts/helloWorld/components/styles/TrainingCard.styles.ts` — style module example
-- `src/webparts/helloWorld/components/MyCourses.tsx` — shows state & progress handling
-- `src/webparts/helloWorld/components/AdminBoard.tsx` — admin management
+- `src/webparts/trainingPortal/components/TrainingDashboard.tsx` — main orchestrator
+- `src/webparts/trainingPortal/components/TrainingCard.tsx` — simple component + styles example
+- `src/webparts/trainingPortal/components/styles/TrainingCard.styles.ts` — style module example
+- `src/webparts/trainingPortal/components/MyCourses.tsx` — shows state & progress handling
+- `src/webparts/trainingPortal/components/AdminBoard.tsx` — admin management
 
 13. Commands summary (copy-paste)
 ```

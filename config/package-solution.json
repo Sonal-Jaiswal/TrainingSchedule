@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "rishi-client-side-solution",
+    "name": "training-portal-client-side-solution",
     "id": "27340413-e6ef-4f79-bebe-2a1750f58abc",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
@@ -27,7 +27,7 @@
     },
     "features": [
       {
-        "title": "rishi Feature",
+        "title": "TrainingPortal Feature",
         "description": "The feature that activates elements of the rishi solution.",
         "id": "1eb85d2a-cc02-46df-9a48-d6bb00062160",
         "version": "1.0.0.0"
@@ -35,6 +35,6 @@
     ]
   },
   "paths": {
-    "zippedPackage": "solution/rishi.sppkg"
+    "zippedPackage": "solution/training-portal.sppkg"
   }
 }

@@ -3,7 +3,7 @@ import { PrimaryButton, DefaultButton } from "@fluentui/react";
 import { ITraining } from "./TrainingModels";
 
 interface IProps {
-  selectedTraining: ITraining | null;
+  selectedTraining: ITraining | null; // eslint-disable-line @rushstack/no-new-null
   employeeName: string;
   submitting: boolean;
   onConfirm: () => Promise<void> | void;
@@ -11,6 +11,7 @@ interface IProps {
 }
 
 const EnrollmentModal: React.FC<IProps> = ({ selectedTraining, employeeName, submitting, onConfirm, onCancel }) => {
+  // eslint-disable-next-line @rushstack/no-new-null
   if (!selectedTraining) return null;
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>

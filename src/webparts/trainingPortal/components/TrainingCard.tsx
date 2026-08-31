@@ -38,6 +38,7 @@ const TrainingCard: React.FC<IProps> = ({ training, userRole, onEnroll, isEnroll
       </div>
 
       {userRole === "Employee" && (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         <PrimaryButton
           text={isEnrolled ? "Already Enrolled" : (training.AvailableSeats > 0 ? "Enroll Now" : "Fully Booked")}
           disabled={isEnrolled || training.AvailableSeats <= 0}
