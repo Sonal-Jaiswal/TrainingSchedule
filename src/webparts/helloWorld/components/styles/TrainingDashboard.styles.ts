@@ -16,8 +16,9 @@ export const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: "24px",
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.12)"
+    alignItems: "center",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+    position: "relative"
   },
   headerTitle: {
     margin: "0 0 8px 0",
@@ -31,10 +32,14 @@ export const styles: { [key: string]: React.CSSProperties } = {
   },
   userBadge: {
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "row",
     alignItems: "center",
-    gap: "10px",
-    position: "relative"
+    gap: "12px",
+    position: "absolute",
+    right: "16px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    zIndex: 5
   },
   avatarButton: {
     width: "52px",
@@ -54,7 +59,7 @@ export const styles: { [key: string]: React.CSSProperties } = {
   profilePanel: {
     position: "absolute",
     top: "64px",
-    right: 0,
+    right: "0",
     width: "210px",
     padding: "14px",
     backgroundColor: "#ffffff",
@@ -63,6 +68,20 @@ export const styles: { [key: string]: React.CSSProperties } = {
     boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
     zIndex: 10,
     textAlign: "left"
+  },
+  rightArea: {
+    position: "relative",
+    marginLeft: "auto",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    zIndex: 5
+  },
+  rightRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: "12px"
   },
   profileName: {
     margin: 0,
