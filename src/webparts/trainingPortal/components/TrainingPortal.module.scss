@@ -1,12 +1,20 @@
 @import '~@fluentui/react/dist/sass/References.scss';
 
-.helloWorld {
+.trainingPortal {
   overflow: hidden;
   padding: 1em;
   color: "[theme:bodyText, default: #323130]";
   color: var(--bodyText);
   &.teams {
     font-family: $ms-font-family-fallbacks;
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px;
   }
 }
 
@@ -17,6 +25,10 @@
 .welcomeImage {
   width: 100%;
   max-width: 420px;
+
+  @media (max-width: 480px) {
+    max-width: 280px;
+  }
 }
 
 .links {

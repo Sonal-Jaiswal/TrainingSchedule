@@ -8,19 +8,19 @@ import TrainingDashboard from './components/TrainingDashboard';
 
 import WelcomePage from './components/WelcomePage';
 
-import { IHelloWorldProps } from './components/IHelloWorldProps';
+import { ITrainingPortalProps } from './components/ITrainingPortalProps';
 
 import { getSP } from './components/pnpjsConfig';
 
-export interface IHelloWorldWebPartProps {
+export interface ITrainingPortalWebPartProps {
 
   description: string;
 
 }
 
-export default class HelloWorldWebPart
+export default class TrainingPortalWebPart
 
-  extends BaseClientSideWebPart<IHelloWorldWebPartProps> {
+  extends BaseClientSideWebPart<ITrainingPortalWebPartProps> {
 
   // Keeps the welcome page visible until the user opens the dashboard.
   private showWelcomePage: boolean = true;
@@ -43,7 +43,7 @@ export default class HelloWorldWebPart
           {
             description: this.properties.description,
             context: this.context
-          } as IHelloWorldProps
+          } as ITrainingPortalProps
         );
 
     ReactDom.render(

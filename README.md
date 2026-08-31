@@ -1,188 +1,83 @@
-# SPFx
+TrainingSchedule
 
-## Summary
+TrainingSchedule is a SharePoint Framework (SPFx) web part that provides a corporate training dashboard. It lets employees view available trainings, enroll in courses, track progress, and lets admins create and manage trainings and enrollments.
 
-Short summary on functionality and used technologies.
+Key features
+- Dashboard view of trainings and enrollments
+- Employee "My Courses" view with progress tracking
+- Admin board to create trainings and manage enrollments
+- Modular React + TypeScript codebase
+- Styles extracted into small TypeScript style modules (no SCSS changes)
 
-[picture of the solution in action, if possible]
+Architecture
+- Frontend: React components (functional components) written in TypeScript
+- SPFx: Web part wiring and SharePoint access using PnPjs
+- Styling: Inline styles were moved into small TypeScript modules under src/webparts/helloWorld/components/styles
+- Main composition: TrainingDashboard composes smaller components: Header, TrainingList, TrainingCard, MyCourses, AdminBoard, EnrollmentModal, TrainingForm.
 
-## Used SharePoint Framework Version
+Tech Stack
+- TypeScript (~5.x)
+- React 17
+- SPFx (SharePoint Framework) Web Part
+- @fluentui/react for UI controls
+- @pnp/sp for SharePoint REST access
+- Gulp for SPFx build tasks
 
-![version](https://img.shields.io/badge/version-1.21.0-green.svg)
+Repository structure (important paths)
+- src/index.ts — web part entry
+- src/webparts/helloWorld/ — main web part source
+  - HelloWorldWebPart.ts — SPFx web part class (TrainingPortalWebPart)
+  - components/ — React components used by the web part
+    - ui/ and component files (e.g., TrainingCard.tsx, TrainingDashboard.tsx)
+    - styles/ — TypeScript style modules (e.g., TrainingCard.styles.ts)
+- config/ — SPFx build configuration and deploy settings
+- gulpfile.js, package.json, tsconfig.json — build and toolchain
 
-## Applies to
+How it was built (high level)
+1. The UI was refactored from large monolithic files into many smaller components to improve readability and maintainability.
+2. Large inline style objects were extracted into small TypeScript modules so the UI looks the same but styles are easier to manage.
+3. TypeScript checks (npx tsc --noEmit -p tsconfig.json) were run frequently to catch typing and duplicate-definition issues.
+4. Commits and pushes were made to a feature branch named sonal.
 
-- [SharePoint Framework](https://aka.ms/spfx)
-- [Microsoft 365 tenant](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/set-up-your-developer-tenant)
+Getting started (developer)
+Prerequisites:
+- Node.js (14+ or 16+ depending on SPFx version)
+- npm or yarn
+- Gulp installed globally if you run gulp tasks directly: npm i -g gulp-cli
 
-> Get your own free development tenant by subscribing to [Microsoft 365 developer program](http://aka.ms/o365devprogram)
+Install dependencies:
+Run: npm install
 
-## Prerequisites
+Type-check the project:
+Run: npx tsc --noEmit -p tsconfig.json
 
-> Any special pre-requisites?
+Build (SPFx bundle):
+Run: gulp bundle --ship
 
-## Solution
+Serve locally (if configured):
+Run: gulp serve
 
-| Solution    | Author(s)                                               |
-| ----------- | ------------------------------------------------------- |
-| folder name | Author details (name, company, twitter alias with link) |
+Common developer tasks
+- Run type-check: npx tsc --noEmit -p tsconfig.json
+- Run build: gulp bundle
+- Run local dev server: gulp serve
+- Commit & push: git add -A && git commit -m "your message" && git push origin sonal
 
-## Version history
+Notes about the refactor
+- Style extraction was done using small TypeScript objects exported from components/styles/*.styles.ts files.
+- Some dynamic style helpers in style modules were typed loosely (any) to avoid friction with Fluent UI's IStyle typing.
+- Duplicate code artifacts and unused imports were removed during the process.
 
-| Version | Date             | Comments        |
-| ------- | ---------------- | --------------- |
-| 1.1     | March 10, 2021   | Update comment  |
-| 1.0     | January 29, 2021 | Initial release |
+Where to look first
+- UI composition and main logic: src/webparts/trainingPortal/components/TrainingDashboard.tsx
+- Training card (single item): src/webparts/trainingPortal/components/TrainingCard.tsx
+- Styles: src/webparts/trainingPortal/components/styles/
 
-## Disclaimer
-
-**THIS CODE IS PROVIDED _AS IS_ WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
+Want me to continue?
+If you'd like I can:
+- Extract remaining style modules (AdminBoard, EnrollmentModal, TrainingForm, Header) the same way.
+- Clean up duplicate ui/ or modular/ folders if you want a single consolidated location.
 
 ---
 
-## Minimal Path to Awesome
-
-- Clone this repository
-- Ensure that you are at the solution folder
-- in the command-line run:
-  - **npm install**
-  - **gulp serve**
-
-> Include any additional steps as needed.
-
-## Features
-
-Description of the extension that expands upon high-level summary above.
-
-This extension illustrates the following concepts:
-
-- topic 1
-- topic 2
-- topic 3
-
-## System Architecture
-
-This solution is a SharePoint Framework client-side web part built with React,
-Fluent UI, TypeScript, and PnPjs.
-
-```text
-Employee
-   |
-SharePoint Page
-   |
-HelloWorldWebPart
-   |
-WelcomePage -> TrainingDashboard -> MyCourses
-                     |
-                 PnPjs / SPFx context
-                  /              \
-        Trainings-SAR        Enrollments-SAR
-```
-
-### Application Layers
-
-- **Web part layer:** `HelloWorldWebPart.ts` is the SPFx entry point. It mounts
-  React and switches between the welcome page and training dashboard.
-- **Presentation layer:** `WelcomePage.tsx`, `TrainingDashboard.tsx`, and
-  `MyCourses.tsx` provide the user interface and interactions.
-- **Data access layer:** `pnpjsConfig.ts` creates a PnPjs client using the
-  current SharePoint `WebPartContext`. The dashboard reads and updates list
-  data through PnPjs.
-- **Data layer:** SharePoint lists store trainings and employee enrollments.
-- **Demo progress layer:** ten course modules are generated for each
-  enrollment. Module completion is saved in browser `localStorage` using the
-  `training-course-module-progress` key.
-
-### SharePoint Lists
-
-#### Trainings-SAR
-
-`Id`, `Title`, `Description`, `Category`, `Trainer`, `TrainingDate`,
-`AvailableSeats`, and `Status`.
-
-#### Enrollments-SAR
-
-`Id`, `Employee`, `Training`, `EnrollmentDate`, `Status`, and
-`CompletionStatus`.
-
-### Main Workflows
-
-**Loading:** The current user, trainings, and enrollments are loaded when the
-dashboard initializes. The dashboard filters enrollments for the current user.
-
-**Enrollment:** The application checks for an existing non-cancelled
-enrollment, verifies the latest seat count, creates an enrollment record, and
-decreases `AvailableSeats`.
-
-**Cancellation:** The enrollment status is changed to `Cancelled`, one seat is
-returned to the related training, and the dashboard data is refreshed.
-
-**Module progress:** Users can check or uncheck ten demo modules per course.
-The graph, progress bars, and summary cards update immediately. Progress stays
-after a browser refresh until the user changes the module selections.
-
-> Module progress is currently browser-local and is not shared between devices.
-> For enterprise persistence, create a SharePoint module-progress list.
-
-## Project Structure
-
-```text
-demo/
-├── config/                  # SPFx build, serve, package, and deployment config
-├── src/
-│   ├── index.ts
-│   └── webparts/helloWorld/
-│       ├── HelloWorldWebPart.ts
-│       ├── HelloWorldWebPart.manifest.json
-│       ├── assets/
-│       ├── components/
-│       │   ├── IHelloWorldProps.ts
-│       │   ├── MyCourses.tsx
-│       │   ├── pnpjsConfig.ts
-│       │   ├── TrainingDashboard.tsx
-│       │   ├── TrainingModels.ts
-│       │   ├── TrainingService.ts
-│       │   ├── TrainingCard.tsx
-│       │   └── WelcomePage.tsx
-│       └── loc/              # Localized strings
-├── lib/                      # Compiled JavaScript and declarations
-├── release/                  # Bundles, manifests, and audit output
-├── teams/                    # Teams packaging output
-├── temp/                     # Temporary SPFx build output
-├── gulpfile.js               # Gulp/SPFx task configuration
-├── package.json              # Dependencies and npm scripts
-├── tsconfig.json             # TypeScript compiler configuration
-└── README.md
-```
-
-## Development and Deployment
-
-```bash
-npm install
-npm run build
-gulp serve
-```
-
-- SPFx version: `1.21.0`
-- React version: `17.0.1`
-- Fluent UI version: `8.106.4`
-- PnPjs version: `4.21.0`
-- TypeScript target: `ES5`
-- Package output: `solution/rishi.sppkg`
-- Development workbench: `config/serve.json`
-
-The dashboard uses the `Trainings-SAR` list. The older `TrainingService.ts`
-helper currently references `Trainings`; align that list name if the helper is
-used again.
-
-> Notice that better pictures and documentation will increase the sample usage and the value you are providing for others. Thanks for your submissions advance.
-
-> Share your web part with others through Microsoft 365 Patterns and Practices program to get visibility and exposure. More details on the community, open-source projects and other activities from http://aka.ms/m365pnp.
-
-## References
-
-- [Getting started with SharePoint Framework](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/set-up-your-developer-tenant)
-- [Building for Microsoft teams](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/build-for-teams-overview)
-- [Use Microsoft Graph in your solution](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/web-parts/get-started/using-microsoft-graph-apis)
-- [Publish SharePoint Framework applications to the Marketplace](https://docs.microsoft.com/en-us/sharepoint/dev/spfx/publish-to-marketplace-overview)
-- [Microsoft 365 Patterns and Practices](https://aka.ms/m365pnp) - Guidance, tooling, samples and open-source controls for your Microsoft 365 development
+(Generated with assistance from an automated refactor process.)
