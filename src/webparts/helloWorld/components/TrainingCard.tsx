@@ -7,9 +7,10 @@ interface IProps {
   training: ITraining;
   userRole: string;
   onEnroll: (t: ITraining) => void;
+  isEnrolled?: boolean;
 }
 
-const TrainingCard: React.FC<IProps> = ({ training, userRole, onEnroll }) => {
+const TrainingCard: React.FC<IProps> = ({ training, userRole, onEnroll, isEnrolled }) => {
   return (
     <div style={styles.card}>
       <div style={styles.header}>
@@ -37,7 +38,12 @@ const TrainingCard: React.FC<IProps> = ({ training, userRole, onEnroll }) => {
       </div>
 
       {userRole === "Employee" && (
-        <PrimaryButton text={training.AvailableSeats > 0 ? "Enroll Now" : "Fully Booked"} disabled={training.AvailableSeats <= 0} onClick={() => onEnroll(training)} styles={{ root: styles.enrollButton as any }} />
+        <PrimaryButton
+          text={isEnrolled ? "Already Enrolled" : (training.AvailableSeats > 0 ? "Enroll Now" : "Fully Booked")}
+          disabled={isEnrolled || training.AvailableSeats <= 0}
+          onClick={() => onEnroll(training)}
+          styles={{ root: styles.enrollButton as any }}
+        />
       )}
     </div>
   );

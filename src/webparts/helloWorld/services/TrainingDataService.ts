@@ -26,17 +26,18 @@ export const getEnrollments = async (sp: SPFI): Promise<IEnrollment[]> => {
  const items = await sp.web.lists
    .getByTitle("Enrollments-SAR")
    .items
-   .select("Id", "Employee/Title", "Training/Id", "Training/Title", "EnrollmentDate", "Status", "CompletionStatus")
+  .select("Id", "Employee/Title", "Employee/Id", "Training/Id", "Training/Title", "EnrollmentDate", "Status", "CompletionStatus")
    .expand("Employee", "Training")
    .orderBy("Created", false)();
 
- return items.map((item) => ({
-   Id: item.Id,
-   Employee: item.Employee && item.Employee.Title ? item.Employee.Title : "",
-   Training: item.Training && item.Training.Title ? item.Training.Title : "",
-   TrainingId: item.Training && item.Training.Id ? Number(item.Training.Id) : 0,
-   EnrollmentDate: item.EnrollmentDate || "",
-   Status: item.Status || "",
-   CompletionStatus: item.CompletionStatus || ""
- }));
+  return items.map((item) => ({
+    Id: item.Id,
+    Employee: item.Employee && item.Employee.Title ? item.Employee.Title : "",
+    EmployeeId: item.Employee && item.Employee.Id ? Number(item.Employee.Id) : undefined,
+    Training: item.Training && item.Training.Title ? item.Training.Title : "",
+    TrainingId: item.Training && item.Training.Id ? Number(item.Training.Id) : 0,
+    EnrollmentDate: item.EnrollmentDate || "",
+    Status: item.Status || "",
+    CompletionStatus: item.CompletionStatus || ""
+  }));
 };

@@ -109,6 +109,9 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  const [employeeName, setEmployeeName] =
    React.useState<string>("");
 
+  // Stores the numeric id of the current SharePoint user.
+  const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
+
  // Stores the current user's resolved RBAC role.
  const [userRole, setUserRole] =
    React.useState<UserRole>("Employee");
@@ -180,6 +183,7 @@ const employeeInitials: string = employeeName
        setEmployeeName(
          currentUser.Title || ""
        );
+      setCurrentUserId(currentUser.Id || null);
        const trainingService: TrainingService =
          new TrainingService(sp);
        const role: UserRole =
@@ -294,6 +298,11 @@ const employeeInitials: string = employeeName
        "cancelled"
    );
 
+// Set of training IDs the current user is enrolled in (non-cancelled)
+const enrolledTrainingIds: number[] = enrollments
+  .filter((e: IEnrollment) => (currentUserId ? e.EmployeeId === currentUserId : e.Employee === employeeName) && e.Status.toLowerCase() !== "cancelled")
+  .map((e: IEnrollment) => e.TrainingId);
+
  // Opens enrollment confirmation unless the training has no available seats.
  const openEnrollment =
    (training: ITraining): void => {
@@ -322,36 +331,28 @@ const employeeInitials: string = employeeName
        );
        return;
      }
-     try {
-       setSubmitting(true);
-       setError("");
-       setSuccess("");
-       await enrollCurrentUser(
-         sp,
-         selectedTraining.Id,
-         selectedTraining.TrainingName
-       );
+    try {
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
+      // remember the training name so we can show a success message after closing the modal
+      const enrolledName = selectedTraining.TrainingName;
+      // close the modal immediately so it disappears right after the user confirms
+      setSelectedTraining(null);
 
-       // ----------------------------------------------------
-       // RELOAD TRAININGS
-       // ----------------------------------------------------
-       await loadTrainings(sp);
+      await enrollCurrentUser(
+        sp,
+        selectedTraining.Id,
+        enrolledName
+      );
 
-       // ----------------------------------------------------
-       // RELOAD ENROLLMENTS
-       // ----------------------------------------------------
-       await loadEnrollments(sp);
+      // reload data
+      await loadTrainings(sp);
+      await loadEnrollments(sp);
 
-       // ----------------------------------------------------
-       // SUCCESS
-       // ----------------------------------------------------
-       setSuccess(
-         "Successfully enrolled in " +
-         selectedTraining.TrainingName +
-         "."
-       );
-       setSelectedTraining(null);
-     }
+      // success
+      setSuccess("Successfully enrolled in " + enrolledName + ".");
+    }
      catch (err) {
        console.error(
          "Enrollment error:",
@@ -554,7 +555,7 @@ return (
           <Dropdown label="Category" selectedKey={selectedCategory} options={categories} onChange={(_ev, option) => { if (option) setSelectedCategory(option.key as string); }} />
         </div>
 
-        <TrainingList trainings={filteredTrainings} userRole={userRole} onEnroll={openEnrollment} />
+        <TrainingList trainings={filteredTrainings} userRole={userRole} onEnroll={openEnrollment} enrolledTrainingIds={enrolledTrainingIds} />
 
         {filteredTrainings.length === 0 && (
           <div style={styles.noResults}><h3>No trainings found</h3><p>Try changing your search or category.</p></div>
