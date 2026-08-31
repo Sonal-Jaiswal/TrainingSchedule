@@ -14,6 +14,7 @@ export interface ITraining {
 export interface IEnrollment {
  Id: number;
  Employee: string;
+ EmployeeId?: number;
  Training: string;
  TrainingId: number;
  EnrollmentDate: string;

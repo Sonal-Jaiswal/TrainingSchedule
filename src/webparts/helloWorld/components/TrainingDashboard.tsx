@@ -98,6 +98,10 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
  const [employeeName, setEmployeeName] =
    React.useState<string>("");
 
+ // Stores the current user's ID for enrollment detection.
+ const [currentUserId, setCurrentUserId] =
+   React.useState<number | null>(null);
+
  // Stores the current user's resolved RBAC role.
  const [userRole, setUserRole] =
    React.useState<UserRole>("Employee");
@@ -148,9 +152,9 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
    },
    userBadge: {
      display: "flex",
-     flexDirection: "column",
+     flexDirection: "row",
      alignItems: "center",
-     gap: "10px",
+     gap: "12px",
      position: "relative"
    },
    avatarButton: {
@@ -171,7 +175,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
    profilePanel: {
      position: "absolute",
      top: "64px",
-     right: 0,
+     right: "0",
      width: "210px",
      padding: "14px",
      backgroundColor: "#ffffff",
@@ -423,6 +427,7 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
      .select(
        "Id",
        "Employee/Title",
+       "Employee/Id",
        "Training/Id",
        "Training/Title",
        "EnrollmentDate",
@@ -445,6 +450,11 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          item.Employee.Title
            ? item.Employee.Title
            : "",
+       EmployeeId:
+         item.Employee &&
+         item.Employee.Id
+           ? Number(item.Employee.Id)
+           : undefined,
        Training:
          item.Training &&
          item.Training.Title
@@ -478,6 +488,9 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
          await sp.web.currentUser();
        setEmployeeName(
          currentUser.Title || ""
+       );
+       setCurrentUserId(
+         currentUser.Id || null
        );
        const trainingService: TrainingService =
          new TrainingService(sp);
@@ -585,10 +598,23 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
        training.AvailableSeats,
      0
    );
+ const enrolledTrainingIds: number[] =
+   enrollments
+     .filter(
+       (e: IEnrollment) =>
+         (currentUserId
+           ? e.EmployeeId === currentUserId
+           : e.Employee === employeeName) &&
+         e.Status.toLowerCase() !== "cancelled"
+     )
+     .map((e: IEnrollment) => e.TrainingId);
+
  const myCourses: IEnrollment[] =
    enrollments.filter(
      (enrollment: IEnrollment) =>
-       enrollment.Employee === employeeName &&
+       (currentUserId
+         ? enrollment.EmployeeId === currentUserId
+         : enrollment.Employee === employeeName) &&
        enrollment.Status.toLowerCase() !==
        "cancelled"
    );
@@ -1314,11 +1340,14 @@ const HelloWorld: React.FC<IHelloWorldProps> = (props) => {
                {/* ENROLL BUTTON */}
              {userRole === "Employee" && <PrimaryButton
                  text={
-                   training.AvailableSeats > 0
+                   enrolledTrainingIds.indexOf(training.Id) !== -1
+                     ? "Already Enrolled"
+                     : training.AvailableSeats > 0
                      ? "Enroll Now"
                      : "Fully Booked"
                  }
                  disabled={
+                   enrolledTrainingIds.indexOf(training.Id) !== -1 ||
                    training.AvailableSeats <= 0
                  }
                  onClick={() =>
